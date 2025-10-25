@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# ------------------------------------------------------------------
+# setup - prepares environment variables and directories for n8n
+# ------------------------------------------------------------------
+
+set -e
+
+echo "Setting up n8n environment..."
+
+# Detect UID and GID
+USER_ID=$(id -u)
+GROUP_ID=$(id -g)
+
+# Export to current shell
+export N8N_UID="$USER_ID"
+export N8N_GID="$GROUP_ID"
+
+echo "UID and GID detected:"
+echo "  N8N_UID=$N8N_UID"
+echo "  N8N_GID=$N8N_GID"
+echo
+
+# ------------------------------------------------------------------
+# Create or update .env file for Docker Compose
+# ------------------------------------------------------------------
+ENV_FILE=".env"
+
+if [ ! -f "$ENV_FILE" ]; then
+  echo "Creating new .env file..."
+  {
+    echo "N8N_UID=$N8N_UID"
+    echo "N8N_GID=$N8N_GID"
+  } > "$ENV_FILE"
+  echo "Created .env file."
+else
+  echo "Updating existing .env file..."
+  # Remove any spaces around equals and update values
+  sed -i "s/^N8N_UID *=.*/N8N_UID=$N8N_UID/" "$ENV_FILE" 2>/dev/null || echo "N8N_UID=$N8N_UID" >> "$ENV_FILE"
+  sed -i "s/^N8N_GID *=.*/N8N_GID=$N8N_GID/" "$ENV_FILE" 2>/dev/null || echo "N8N_GID=$N8N_GID" >> "$ENV_FILE"
+  echo "Updated .env file."
+fi
+
+# ------------------------------------------------------------------
+# Create required n8n directories on host
+# ------------------------------------------------------------------
+echo
+echo "Creating n8n directories if missing..."
+
+mkdir -p ~/.n8n/input-files
+mkdir -p ~/.n8n/output-files
+
+# Apply correct ownership and permissions
+sudo chown -R 1000:1000 ~/.n8n
+chmod -R 755 ~/.n8n
+
+echo "Directories ready:"
+ls -ld ~/.n8n ~/.n8n/input-files ~/.n8n/output-files
+echo
+
+# ------------------------------------------------------------------
+# Final instructions
+# ------------------------------------------------------------------
+echo "Setup complete."
+echo "You can now launch n8n with:"
+echo "  docker compose up -d"
+echo
+echo "The .env file now contains:"
+cat "$ENV_FILE"

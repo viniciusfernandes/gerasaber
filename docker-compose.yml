@@ -1,0 +1,18 @@
+services:
+  n8n:
+    image: n8nio/n8n
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+      - GENERIC_LANGUAGE=pt-BR      
+    user: "${N8N_UID}:${N8N_GID}"
+    volumes:
+      - ~/.n8n:/home/node/.n8n
+    security_opt:
+     - apparmor=unconfined
+    entrypoint: >
+      sh -c "mkdir -p /home/node/.n8n/input-files /home/node/.n8n/output-files &&
+         	chown -R ${N8N_UID}:${N8N_GID} /home/node/.n8n &&
+         	exec docker-entrypoint.sh n8n"

@@ -1,0 +1,103 @@
+{
+  "name": "AI Summarization Flow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "upload-files",
+        "responseMode": "lastNode"
+      },
+      "name": "Receive Files",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{'/home/node/.n8n/' + $binary.data.fileName}}",
+        "data": "={{$binary.data}}"
+      },
+      "name": "Save Input File",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{\n  json: {\n    content: $binary.data.toString('utf8'),\n    fileName: $binary.data.fileName\n  }\n}];"
+      },
+      "name": "Extract Text",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "headerAuth",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "options": {},
+        "jsonParameters": true,
+        "headerParametersJson": "{\"Content-Type\":\"application/json\",\"Authorization\":\"Bearer YOUR_OPENAI_API_KEY\"}",
+        "bodyParametersJson": "={\"model\":\"gpt-4o\",\"messages\":[{\"role\":\"system\",\"content\":\"You are a summarization assistant. Summarize the text into a bullet point list for inclusion in a PDF.\"},{\"role\":\"user\",\"content\":$json[\"content\"]}]}"
+      },
+      "name": "Call ChatGPT",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const summary = $json.choices[0].message.content;\nconst safeName = summary.split(/\\s+/).slice(0,5).join(\"_\").replace(/[^a-zA-Z0-9_]/g, \"\");\nreturn [{ json: { summary, fileName: safeName + '.pdf' } }];"
+      },
+      "name": "Prepare Summary File",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{'/home/node/.n8n/' + $json[\"fileName\"]}}",
+        "data": "={{$json[\"summary\"]}}"
+      },
+      "name": "Save PDF Summary",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [1500, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8088/material-didatico/",
+        "options": {},
+        "sendBinaryData": true,
+        "binaryPropertyName": "data"
+      },
+      "name": "Send to REST Endpoint",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1750, 300]
+    }
+  ],
+  "connections": {
+    "Receive Files": {
+      "main": [[{"node": "Save Input File", "type": "main", "index": 0}]]
+    },
+    "Save Input File": {
+      "main": [[{"node": "Extract Text", "type": "main", "index": 0}]]
+    },
+    "Extract Text": {
+      "main": [[{"node": "Call ChatGPT", "type": "main", "index": 0}]]
+    },
+    "Call ChatGPT": {
+      "main": [[{"node": "Prepare Summary File", "type": "main", "index": 0}]]
+    },
+    "Prepare Summary File": {
+      "main": [[{"node": "Save PDF Summary", "type": "main", "index": 0}]]
+    },
+    "Save PDF Summary": {
+      "main": [[{"node": "Send to REST Endpoint", "type": "main", "index": 0}]]
+    }
+  },
+  "active": false
+}

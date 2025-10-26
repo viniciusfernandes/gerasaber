@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  middleware-api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - N8N_BASE_URL=${N8N_BASE_URL:-http://host.docker.internal:5678}
+      - N8N_AUTH_TOKEN=${N8N_AUTH_TOKEN:-}
+      - STORAGE_LOCAL_PATH=/var/app/files
+    volumes:
+      - ./files:/var/app/files
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

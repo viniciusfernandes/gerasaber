@@ -36,10 +36,14 @@ This script will:
 - Create or update a `.env` file with those variables.
 - Create the folders:
   ```
-  ~/.n8n/input-files
-  ~/.n8n/output-files
+  	mkdir -p ~/.n8n/input-files
+	mkdir -p ~/.n8n/output-files
   ```
 - Apply proper permissions so the Docker container can write to them.
+  ```
+  	sudo chown -R $USER:$USER ~/.n8n
+	chmod -R 700 ~/.n8n
+  ```
 
 ---
 

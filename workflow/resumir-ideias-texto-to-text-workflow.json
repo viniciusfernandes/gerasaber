@@ -1,0 +1,142 @@
+{
+  "name": "ChatGPT File Summarization (Plain Text Response)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chatgpt-summarization-text",
+        "responseMode": "lastNode",
+        "responseData": "firstEntryJson",
+        "options": {
+          "binaryPropertyName": "data",
+          "responseContentType": "application/json"
+        }
+      },
+      "id": "1",
+      "name": "Inbound Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.openai.com/v1/chat/completions",
+        "method": "POST",
+        "authentication": "none",
+        "responseFormat": "json",
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer "
+            }
+          ]
+        },
+        "bodyParametersJson": "={\n  \"model\": \"gpt-4-turbo\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a service that summarizes uploaded documents into concise bullet lists. Return only plain text in bullet format.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": $binary.data.data.toString('base64')\n    }\n  ]\n}"
+      },
+      "id": "2",
+      "name": "ChatGPT Summarization",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{ json: { summary: $json.choices[0].message.content } }];"
+      },
+      "id": "3",
+      "name": "Extract Summary Text",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        950,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8088/material-didatico/",
+        "method": "POST",
+        "responseFormat": "json",
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "bodyParametersJson": "={ \"summary\": $json.summary }"
+      },
+      "id": "4",
+      "name": "Send Summary to Endpoint",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Inbound Webhook": {
+      "main": [
+        [
+          {
+            "node": "ChatGPT Summarization",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ChatGPT Summarization": {
+      "main": [
+        [
+          {
+            "node": "Extract Summary Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Summary Text": {
+      "main": [
+        [
+          {
+            "node": "Send Summary to Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": false,
+    "errorWorkflow": ""
+  },
+  "tags": [
+    {
+      "name": "production"
+    },
+    {
+      "name": "chatgpt"
+    },
+    {
+      "name": "summarization"
+    }
+  ]
+}

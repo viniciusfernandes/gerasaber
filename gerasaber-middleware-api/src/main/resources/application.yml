@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: gerasaber-middleware-api
+  threads:
+    virtual:
+      enabled: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+server:
+  port: 8080
+
+n8n:
+  base-url: ${N8N_BASE_URL:http://localhost:5678}
+  upload-endpoint: ${N8N_UPLOAD_ENDPOINT:/webhook/upload-files}
+  webhook-path: ${N8N_WEBHOOK_PATH:/webhook/chatgpt-summarization}
+  auth-token: ${N8N_AUTH_TOKEN:}
+
+storage:
+  local-path: ${STORAGE_LOCAL_PATH:/var/app/files}
+  temp-path: ${STORAGE_TEMP_PATH:/tmp/middleware/files}
+
+logging:
+  level:
+    br.com.gerasaber: DEBUG
+    org.springframework.web: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

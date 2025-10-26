@@ -15,7 +15,7 @@
     {
       "parameters": {
         "operation": "write",
-        "fileName": "={{'/home/node/.n8n/' + $binary.data.fileName}}",
+        "fileName": "={{'/home/node/.n8n/input-file' + $binary.data.fileName}}",
         "data": "={{$binary.data}}"
       },
       "name": "Save Input File",
@@ -38,7 +38,7 @@
         "url": "https://api.openai.com/v1/chat/completions",
         "options": {},
         "jsonParameters": true,
-        "headerParametersJson": "{\"Content-Type\":\"application/json\",\"Authorization\":\"Bearer YOUR_OPENAI_API_KEY\"}",
+        "headerParametersJson": "{\"Content-Type\":\"application/json\" }",
         "bodyParametersJson": "={\"model\":\"gpt-4o\",\"messages\":[{\"role\":\"system\",\"content\":\"You are a summarization assistant. Summarize the text into a bullet point list for inclusion in a PDF.\"},{\"role\":\"user\",\"content\":$json[\"content\"]}]}"
       },
       "name": "Call ChatGPT",

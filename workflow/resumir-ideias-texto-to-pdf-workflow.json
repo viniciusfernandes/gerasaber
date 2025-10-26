@@ -1,0 +1,98 @@
+{
+  "name": "ChatGPT File Summarization (Production Minimal - Token Inline)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chatgpt-summarization",
+        "responseMode": "lastNode",
+        "responseData": "firstEntryBinary",
+        "options": {
+          "binaryPropertyName": "summary_pdf",
+          "responseContentType": "application/pdf"
+        }
+      },
+      "id": "1",
+      "name": "Inbound Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.openai.com/v1/chat/completions",
+        "method": "POST",
+        "authentication": "none",
+        "responseFormat": "json",
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer "
+            }
+          ]
+        },
+        "bodyParametersJson": "={\n  \"model\": \"gpt-4-turbo\",\n  \"messages\": [\n    {\"role\": \"system\", \"content\": \"You are a service that summarizes uploaded files into concise bullet lists and returns a PDF file as base64.\"},\n    {\"role\": \"user\", \"content\": $binary.data.data.toString('base64') }\n  ]\n}"
+      },
+      "id": "2",
+      "name": "ChatGPT Summarization",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const content = $json.choices?.[0]?.message?.content || '';\nconst pdfBytes = Buffer.from(content, 'base64');\nreturn [{ binary: { summary_pdf: { data: pdfBytes.toString('base64'), mimeType: 'application/pdf', fileName: 'summary.pdf' } } }];"
+      },
+      "id": "3",
+      "name": "Return PDF to User",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    }
+  ],
+  "connections": {
+    "Inbound Webhook": {
+      "main": [
+        [
+          {
+            "node": "ChatGPT Summarization",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ChatGPT Summarization": {
+      "main": [
+        [
+          {
+            "node": "Return PDF to User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": false,
+    "errorWorkflow": ""
+  },
+  "tags": [
+    {
+      "name": "production"
+    },
+    {
+      "name": "chatgpt"
+    },
+    {
+      "name": "summarization"
+    }
+  ]
+}

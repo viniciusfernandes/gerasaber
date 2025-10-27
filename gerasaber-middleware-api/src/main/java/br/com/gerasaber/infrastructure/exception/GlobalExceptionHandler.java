@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import java.util.List;
 import java.util.Map;
@@ -17,6 +19,20 @@ import java.util.Map;
 @Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
+    
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<Map<String, Object>> handleMultipartException(MultipartException e) {
+        log.warn("Multipart parsing error: {}", e.getMessage());
+        return ResponseEntity.badRequest()
+                .body(Map.of("errors", List.of("Failed to parse multipart request. Please check the request format.")));
+    }
+    
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<Map<String, Object>> handleMissingServletRequestPartException(MissingServletRequestPartException e) {
+        log.warn("Missing request part: {}", e.getRequestPartName());
+        return ResponseEntity.badRequest()
+                .body(Map.of("errors", List.of("Required part '" + e.getRequestPartName() + "' is not present")));
+    }
     
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException e) {

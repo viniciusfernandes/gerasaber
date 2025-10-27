@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.core.io.ByteArrayResource;
 
 import java.util.List;
 
@@ -65,50 +65,15 @@ public class FileUploadService implements IFileUploadService {
     private MultiValueMap<String, Object> buildFormData(UploadRequest uploadRequest) {
         MultiValueMap<String, Object> formData = new LinkedMultiValueMap<>();
         
-        // Add files
+        // Add files using ByteArrayResource
         for (UploadRequest.FilePart file : uploadRequest.getFiles()) {
-            MultipartFile multipartFile = new MultipartFile() {
+            ByteArrayResource fileResource = new ByteArrayResource(file.getContent()) {
                 @Override
-                public String getName() {
-                    return "files";
-                }
-                
-                @Override
-                public String getOriginalFilename() {
+                public String getFilename() {
                     return file.getOriginalFilename();
                 }
-                
-                @Override
-                public String getContentType() {
-                    return file.getContentType();
-                }
-                
-                @Override
-                public boolean isEmpty() {
-                    return file.getContent().length == 0;
-                }
-                
-                @Override
-                public long getSize() {
-                    return file.getSize();
-                }
-                
-                @Override
-                public byte[] getBytes() {
-                    return file.getContent();
-                }
-                
-                @Override
-                public java.io.InputStream getInputStream() {
-                    return new java.io.ByteArrayInputStream(file.getContent());
-                }
-                
-                @Override
-                public void transferTo(java.io.File dest) throws java.io.IOException, IllegalStateException {
-                    throw new UnsupportedOperationException("Transfer not supported");
-                }
             };
-            formData.add("files", multipartFile);
+            formData.add("files", fileResource);
         }
         
         // Add prompt description

@@ -29,10 +29,10 @@ public class UploadFileEndpoint {
     
     @PostMapping("/upload")
     public ResponseEntity<Map<String, Object>> uploadFiles(
-            @RequestParam(value = "files") List<MultipartFile> files,
-            @RequestParam("promptDescription") String promptDescription) {
+            @RequestParam(value = "files", required = false) List<MultipartFile> files,
+            @RequestParam(value = "promptDescription", required = false) String promptDescription) {
         
-        log.info("Received upload request with {} files", files.size());
+        log.info("Received upload request with {} files", files != null ? files.size() : 0);
         
         try {
             // Validate input
